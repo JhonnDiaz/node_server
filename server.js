@@ -167,49 +167,42 @@ app.get('/login', (req, res) => {
     });
 });
 
-// API para realizar una venta
-app.post('/venta', (req, res) => {
-    const { cliente_id, productos, metodo_pago_id, subtotal, descuento, iva, total } = req.body;
+app.post('/venta', async (req, res) => {
+  const { cliente_id, productos, metodo_pago_id, subtotal, descuento, iva, total } = req.body;
 
-    // 1. Crear la venta
-    db.run(
-        'INSERT INTO Ventas (Cliente_ID, Fecha_Venta) VALUES (?, ?)',
-        [cliente_id, new Date().toISOString()],
-        function (err) {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }
+  const db = require('better-sqlite3')('path/to/database.db'); // Asegúrate de usar una conexión válida
+  const fechaVenta = new Date().toISOString();
 
-            const venta_id = this.lastID; // ID de la venta recién insertada
+  try {
+    const resultVenta = db.prepare('INSERT INTO Ventas (Cliente_ID, Fecha_Venta) VALUES (?, ?)').run(cliente_id, fechaVenta);
+    const venta_id = resultVenta.lastInsertRowid;
 
-            // 2. Insertar los detalles de la venta (productos vendidos)
-            productos.forEach((producto) => {
-                const { producto_id, cantidad } = producto;
+    for (const producto of productos) {
+      const { producto_id, cantidad } = producto;
 
-                // Primero insertamos el detalle de la venta (producto y cantidad)
-                db.run(
-                    'INSERT INTO Detalles_Ventas (Venta_ID, Producto_ID, Cantidad) VALUES (?, ?, ?)',
-                    [venta_id, producto_id, cantidad],
-                    function (err) {
-                        if (err) {
-                            return res.status(500).json({ error: err.message });
-                        }
+      const resultDetalle = db.prepare('INSERT INTO Detalles_Ventas (Venta_ID, Producto_ID, Cantidad) VALUES (?, ?, ?)').run(
+        venta_id,
+        producto_id,
+        cantidad
+      );
 
-                        const detalle_venta_id = this.lastID; // ID del detalle de la venta insertado
+      const detalle_venta_id = resultDetalle.lastInsertRowid;
 
-                        // 3. Insertar la información de la venta (subtotales, descuentos, IVA, total)
-                        db.run(
-                            'INSERT INTO Info_Venta (Detalle_Venta_ID, Subtotal, Descuento, IVA, Total) VALUES (?, ?, ?, ?, ?)',
-                            [detalle_venta_id, subtotal, descuento, iva, total],
-                            (err) => {
-                                if (err) {
-                                    return res.status(500).json({ error: err.message });
-                                }
-                            }
-                        );
-                    }
-                );
-            });
+      db.prepare('INSERT INTO Info_Venta (Detalle_Venta_ID, Subtotal, Descuento, IVA, Total) VALUES (?, ?, ?, ?, ?)').run(
+        detalle_venta_id,
+        subtotal,
+        descuento,
+        iva,
+        total
+      );
+    }
+
+    res.json({ message: 'Venta realizada con éxito', venta_id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
             // 4. Insertar el pago realizado
             db.run(
