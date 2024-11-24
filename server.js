@@ -84,7 +84,9 @@ app.post('/clientes', (req, res) => {
 
 // Ruta para el registro de usuarios
 app.post('/register', (req, res) => {
+    console.log('Datos recibidos:', req.body);
     const { email, password, name, direccion, telefono } = req.body;
+    console.log('Campos:', email, password, name, direccion, telefono);
 
     // Asegúrate de que estas variables están bien definidas
     console.log("Datos recibidos:", { email, password, name, direccion, telefono });
