@@ -1,0 +1,3 @@
+node_modules/
+*.sqlite
+tienda_ropa.db
