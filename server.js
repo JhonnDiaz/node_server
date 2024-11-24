@@ -83,40 +83,48 @@ app.post('/clientes', (req, res) => {
 
 
 // Ruta para el registro de usuarios
-// Validación de existencia del correo
-db.get('SELECT * FROM Clientes WHERE Email = ?', [email], (err, row) => {
-    if (err) {
-        res.status(500).json({ error: 'Error al buscar el correo electrónico.' });
-    } else if (row) {
-        res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
-    } else {
-        // Validación de contraseña
-        db.get('SELECT * FROM Clientes WHERE Password = ?', [password], (err, passRow) => {
-            if (err) {
-                res.status(500).json({ error: 'Error al buscar la contraseña.' });
-            } else if (passRow) {
-                res.status(400).json({ error: 'La contraseña ya está en uso. Por favor, elige otra.' });
-            } else {
-                // Insertar el nuevo cliente
-                db.run(
-                    `INSERT INTO Clientes (Nombre, Direccion, Telefono, Password, Email) 
-                     VALUES (?, ?, ?, ?, ?)`,
-                    [name, direccion, telefono, password, email], // Cambié nombre a 'name', etc.
-                    function (err) {
-                        if (err) {
-                            res.status(500).json({ error: 'Error al registrar el usuario.' });
-                        } else {
-                            res.json({ 
-                                message: 'Usuario registrado exitosamente.', 
-                                userID: this.lastID 
-                            });
+app.post('/register', (req, res) => {
+    const { email, password, name, direccion, telefono } = req.body;
+
+    // Asegúrate de que estas variables están bien definidas
+    console.log("Datos recibidos:", { email, password, name, direccion, telefono });
+
+    // Validar si el email ya está registrado
+    db.get('SELECT * FROM Clientes WHERE Email = ?', [email], (err, row) => {
+        if (err) {
+            res.status(500).json({ error: 'Error al buscar el correo electrónico.' });
+        } else if (row) {
+            res.status(400).json({ error: 'El correo electrónico ya está registrado.' });
+        } else {
+            // Validar si la contraseña ya está en uso
+            db.get('SELECT * FROM Clientes WHERE Password = ?', [password], (err, passRow) => {
+                if (err) {
+                    res.status(500).json({ error: 'Error al buscar la contraseña.' });
+                } else if (passRow) {
+                    res.status(400).json({ error: 'La contraseña ya está en uso. Por favor, elige otra.' });
+                } else {
+                    // Insertar el nuevo cliente en la base de datos
+                    db.run(
+                        `INSERT INTO Clientes (Nombre, Direccion, Telefono, Password, Email) 
+                         VALUES (?, ?, ?, ?, ?)`,
+                        [name, direccion, telefono, password, email],  // Uso correcto de las variables
+                        function (err) {
+                            if (err) {
+                                res.status(500).json({ error: 'Error al registrar el usuario.' });
+                            } else {
+                                res.json({ 
+                                    message: 'Usuario registrado exitosamente.', 
+                                    userID: this.lastID 
+                                });
+                            }
                         }
-                    }
-                );
-            }
-        });
-    }
+                    );
+                }
+            });
+        }
+    });
 });
+
 
 
 
