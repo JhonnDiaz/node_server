@@ -54,7 +54,17 @@ app.get('/productos', (req, res) => {
             params.push(tipo);
         }
     }
-    app.get('/metodo_pago', (req, res) => {
+
+    db.all(query, params, (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+app.get('/metodo_pago', (req, res) => {
     const { nombre, tipo } = req.query;
 
     let query = 'SELECT * FROM Metodos_Pago';
@@ -72,15 +82,6 @@ app.get('/productos', (req, res) => {
             params.push(tipo);
         }
     }
-
-    db.all(query, params, (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(rows);
-        }
-    });
-});
 
     db.all(query, params, (err, rows) => {
         if (err) {
