@@ -54,6 +54,33 @@ app.get('/productos', (req, res) => {
             params.push(tipo);
         }
     }
+    app.get('/metodo_pago', (req, res) => {
+    const { nombre, tipo } = req.query;
+
+    let query = 'SELECT * FROM Metodos_Pago';
+    const params = [];
+
+    if (nombre || tipo) {
+        query += ' WHERE';
+        if (nombre) {
+            query += ' Nombre LIKE ?';
+            params.push(`%${nombre}%`);
+        }
+        if (tipo) {
+            query += nombre ? ' AND' : '';
+            query += ' tipo = ?';
+            params.push(tipo);
+        }
+    }
+
+    db.all(query, params, (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json(rows);
+        }
+    });
+});
 
     db.all(query, params, (err, rows) => {
         if (err) {
