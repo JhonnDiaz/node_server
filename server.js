@@ -214,7 +214,9 @@ app.get('/login', (req, res) => {
                         id: row.Cliente_ID,
                         name: row.Nombre,
                         email: row.Email,
-                        phone: row.Telefono, 
+                        phone: row.Telefono,
+                        direccion:row.Direccion,
+                        contraseña:row.Password,
                     }
                 });
             } else {
