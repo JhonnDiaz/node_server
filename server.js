@@ -92,6 +92,35 @@ app.get('/metodo_pago', (req, res) => {
     });
 });
 
+// Ruta para eliminar un método de pago
+app.delete('/metodos_pago/:id', (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        return res.status(400).json({ error: 'Debe proporcionar un ID válido para eliminar.' });
+    }
+
+    // Eliminar el registro de la base de datos
+    db.run(
+        'DELETE FROM Metodos_Pago WHERE Metodo_Pago_ID = ?',
+        [id],
+        function (err) {
+            if (err) {
+                return res.status(500).json({ error: 'Error al eliminar el método de pago.' });
+            }
+
+            if (this.changes === 0) {
+                // Si no se encontraron filas para eliminar
+                return res.status(404).json({ message: 'Método de pago no encontrado.' });
+            }
+
+            res.status(200).json({ message: 'Método de pago eliminado exitosamente.' });
+        }
+    );
+});
+
+
+
 // Agregar un nuevo cliente
 app.post('/clientes', (req, res) => {
     const { Nombre, Direccion, Telefono } = req.body;
