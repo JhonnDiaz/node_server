@@ -337,6 +337,46 @@ app.get('/compras', (req, res) => {
     });
 });
 
+// Cambiar el estado de una venta a "Cancelada"
+app.patch('/ventas/:venta_id/cancelar', (req, res) => {
+    const { venta_id } = req.params;
+
+    if (!venta_id) {
+        return res.status(400).json({ error: 'Debe proporcionar un ID de venta válido.' });
+    }
+
+    // Verificar si la venta existe antes de actualizar
+    db.get('SELECT * FROM Ventas WHERE Venta_ID = ?', [venta_id], (err, venta) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al buscar la venta.' });
+        }
+
+        if (!venta) {
+            return res.status(404).json({ error: 'Venta no encontrada.' });
+        }
+
+        if (venta.Estado === 'Cancelada') {
+            return res.status(400).json({ error: 'La venta ya está cancelada.' });
+        }
+
+        // Actualizar el estado de la venta a "Cancelada"
+        db.run(
+            'UPDATE Ventas SET Estado = ? WHERE Venta_ID = ?',
+            ['Cancelada', venta_id],
+            function (err) {
+                if (err) {
+                    return res.status(500).json({ error: 'Error al cancelar la venta.' });
+                }
+
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'No se pudo cancelar la venta. Verifique el ID.' });
+                }
+
+                res.json({ message: 'Venta cancelada con éxito.', venta_id });
+            }
+        );
+    });
+});
 
 
 
