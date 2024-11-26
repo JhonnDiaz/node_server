@@ -296,26 +296,29 @@ app.get('/compras', (req, res) => {
 
     // Consulta SQL con filtro de estado
     const query = `
-        SELECT 
-            V.Venta_ID,
-            V.Fecha_Venta,
-            V.Estado AS Estado_Venta, -- Incluir el estado de la venta
-            P.Nombre AS Producto_Nombre,
-            DV.Cantidad,
-            IV.Subtotal,
-            IV.Descuento,
-            IV.IVA,
-            IV.Total,
-            MP.Metodo_Pago AS Metodo_Pago
-        FROM Ventas AS V
-        INNER JOIN Detalles_Ventas AS DV ON V.Venta_ID = DV.Venta_ID
-        INNER JOIN Productos AS P ON DV.Producto_ID = P.Producto_ID
-        INNER JOIN Info_Venta AS IV ON DV.Detalle_Venta_ID = IV.Detalle_Venta_ID
-        INNER JOIN Pagos AS PG ON V.Venta_ID = PG.Venta_ID
-        INNER JOIN Metodos_Pago AS MP ON PG.Metodo_Pago_ID = MP.Metodo_Pago_ID
-        WHERE V.Cliente_ID = ?
-        AND (V.Estado = 'Pendiente' OR V.Estado = 'Aprobada') -- Filtro por estado
-    `;
+    SELECT 
+        V.Venta_ID,
+        V.Fecha_Venta,
+        V.Estado AS Estado_Venta,
+        P.Nombre AS Producto_Nombre,
+        DV.Cantidad,
+        IV.Subtotal,
+        IV.Descuento,
+        IV.IVA,
+        IV.Total,
+        (SELECT MP.Metodo_Pago 
+         FROM Pagos AS PG 
+         INNER JOIN Metodos_Pago AS MP ON PG.Metodo_Pago_ID = MP.Metodo_Pago_ID
+         WHERE PG.Venta_ID = V.Venta_ID
+         LIMIT 1) AS Metodo_Pago -- Obtener un solo método de pago por venta
+    FROM Ventas AS V
+    INNER JOIN Detalles_Ventas AS DV ON V.Venta_ID = DV.Venta_ID
+    INNER JOIN Productos AS P ON DV.Producto_ID = P.Producto_ID
+    INNER JOIN Info_Venta AS IV ON DV.Detalle_Venta_ID = IV.Detalle_Venta_ID
+    WHERE V.Cliente_ID = ?
+    AND (V.Estado = 'Pendiente' OR V.Estado = 'Aprobada')
+`;
+
 
     // Ejecutar la consulta SQL
     db.all(query, [cliente_id], (err, rows) => {
