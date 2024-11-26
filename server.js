@@ -289,10 +289,12 @@ app.post('/venta', (req, res) => {
 app.get('/compras', (req, res) => {
     const { cliente_id } = req.query;
 
+    // Validar que se proporcione cliente_id
     if (!cliente_id) {
         return res.status(400).json({ error: 'Debe proporcionar un Cliente_ID.' });
     }
 
+    // Consulta SQL para obtener las compras realizadas por un cliente
     const query = `
         SELECT 
             V.Venta_ID,
@@ -303,7 +305,7 @@ app.get('/compras', (req, res) => {
             IV.Descuento,
             IV.IVA,
             IV.Total,
-            MP.Nombre AS Metodo_Pago
+            MP.Metodo_Pago AS Metodo_Pago
         FROM Ventas AS V
         INNER JOIN Detalles_Ventas AS DV ON V.Venta_ID = DV.Venta_ID
         INNER JOIN Productos AS P ON DV.Producto_ID = P.Producto_ID
@@ -313,20 +315,22 @@ app.get('/compras', (req, res) => {
         WHERE V.Cliente_ID = ?
     `;
 
+    // Ejecutar la consulta SQL
     db.all(query, [cliente_id], (err, rows) => {
         if (err) {
+            console.error('Error al ejecutar la consulta:', err.message);
             return res.status(500).json({ error: 'Error al obtener las compras del cliente.' });
         }
 
+        // Validar si se encontraron resultados
         if (rows.length === 0) {
             return res.status(404).json({ message: 'No se encontraron compras para este cliente.' });
         }
 
+        // Devolver los resultados
         res.json(rows);
     });
 });
-
-
 
 
 // Iniciar el servidor
