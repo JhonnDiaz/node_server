@@ -285,7 +285,7 @@ app.post('/venta', (req, res) => {
     );
 });
 
-// Obtener todas las compras realizadas por un cliente con estado "Pendiente" o "Aprobada"
+// Obtener todas las compras realizadas por un cliente
 app.get('/compras', (req, res) => {
     const { cliente_id } = req.query;
 
@@ -294,12 +294,11 @@ app.get('/compras', (req, res) => {
         return res.status(400).json({ error: 'Debe proporcionar un Cliente_ID.' });
     }
 
-    // Consulta SQL con filtro de estado
+    // Consulta SQL para obtener las compras realizadas por un cliente
     const query = `
         SELECT 
             V.Venta_ID,
             V.Fecha_Venta,
-            V.Estado AS Estado_Venta,
             P.Nombre AS Producto_Nombre,
             DV.Cantidad,
             IV.Subtotal,
@@ -314,7 +313,6 @@ app.get('/compras', (req, res) => {
         INNER JOIN Pagos AS PG ON V.Venta_ID = PG.Venta_ID
         INNER JOIN Metodos_Pago AS MP ON PG.Metodo_Pago_ID = MP.Metodo_Pago_ID
         WHERE V.Cliente_ID = ?
-        AND (V.Estado = 'Pendiente' OR V.Estado = 'Aprobada') -- Filtro por estado
     `;
 
     // Ejecutar la consulta SQL
@@ -326,13 +324,14 @@ app.get('/compras', (req, res) => {
 
         // Validar si se encontraron resultados
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron compras pendientes o aprobadas para este cliente.' });
+            return res.status(404).json({ message: 'No se encontraron compras para este cliente.' });
         }
 
         // Devolver los resultados
         res.json(rows);
     });
 });
+
 
 
 
