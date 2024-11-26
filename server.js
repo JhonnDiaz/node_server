@@ -299,6 +299,7 @@ app.get('/compras', (req, res) => {
         SELECT 
             V.Venta_ID,
             V.Fecha_Venta,
+            V.Estado AS Estado_Venta, -- Incluir el estado de la venta
             P.Nombre AS Producto_Nombre,
             DV.Cantidad,
             IV.Subtotal,
@@ -331,6 +332,7 @@ app.get('/compras', (req, res) => {
         res.json(rows);
     });
 });
+
 
 
 // Iniciar el servidor
