@@ -285,6 +285,47 @@ app.post('/venta', (req, res) => {
     );
 });
 
+// Obtener todas las compras realizadas por un cliente
+app.get('/compras', (req, res) => {
+    const { cliente_id } = req.query;
+
+    if (!cliente_id) {
+        return res.status(400).json({ error: 'Debe proporcionar un Cliente_ID.' });
+    }
+
+    const query = `
+        SELECT 
+            V.Venta_ID,
+            V.Fecha_Venta,
+            P.Nombre AS Producto_Nombre,
+            DV.Cantidad,
+            IV.Subtotal,
+            IV.Descuento,
+            IV.IVA,
+            IV.Total,
+            MP.Nombre AS Metodo_Pago
+        FROM Ventas AS V
+        INNER JOIN Detalles_Ventas AS DV ON V.Venta_ID = DV.Venta_ID
+        INNER JOIN Productos AS P ON DV.Producto_ID = P.Producto_ID
+        INNER JOIN Info_Venta AS IV ON DV.Detalle_Venta_ID = IV.Detalle_Venta_ID
+        INNER JOIN Pagos AS PG ON V.Venta_ID = PG.Venta_ID
+        INNER JOIN Metodos_Pago AS MP ON PG.Metodo_Pago_ID = MP.Metodo_Pago_ID
+        WHERE V.Cliente_ID = ?
+    `;
+
+    db.all(query, [cliente_id], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al obtener las compras del cliente.' });
+        }
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron compras para este cliente.' });
+        }
+
+        res.json(rows);
+    });
+});
+
 
 
 
